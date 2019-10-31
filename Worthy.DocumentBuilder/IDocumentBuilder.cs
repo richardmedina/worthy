@@ -9,6 +9,6 @@ namespace Worthy.DocumentBuilder
     public interface IDocumentBuilder
     {
         List<IDocumentElement> Elements { get; }
-        byte [] RenderToByteArray();
+        byte [] Build();
     }
 }

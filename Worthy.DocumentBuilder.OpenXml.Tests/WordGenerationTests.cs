@@ -93,9 +93,11 @@ namespace Worthy
             docBuilder.Elements.Add(para);
             //docBuilder.Elements.Add(para2);
             docBuilder.Elements.Add(table);
+            docBuilder.Elements.Add(new ParagraphElement ("\n"));
+            docBuilder.Elements.Add(table);
 
 
-            var bytes = docBuilder.RenderToByteArray();
+            var bytes = docBuilder.Build();
 
             File.WriteAllBytes("myfile.docx", bytes);
         }

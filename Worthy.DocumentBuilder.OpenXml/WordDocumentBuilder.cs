@@ -33,7 +33,7 @@ namespace Worthy.DocumentBuilder.OpenXml
             Elements = elements.ToList ();
         }
 
-        public byte [] RenderToByteArray()
+        public byte [] Build()
         {
             var body = BuildBody();
 
@@ -101,7 +101,6 @@ namespace Worthy.DocumentBuilder.OpenXml
                     style = paragraph.Style;
                 }
 
-
                 if (style != null)
                 {
                     var props = new RunProperties();
@@ -140,14 +139,6 @@ namespace Worthy.DocumentBuilder.OpenXml
                     {
                         props.Append(new Italic());
                     }
-
-                    //if (style.HorizontalAlignment.HasValue)
-                    //{
-                    //    props.Append(new Justification
-                    //    {
-                    //        Val = new EnumValue<JustificationValues>((JustificationValues)style.HorizontalAlignment.Value)
-                    //    });
-                    //}
                 }
 
                 run.Append(GetConcatenatedText(text));
