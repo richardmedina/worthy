@@ -13,7 +13,7 @@ using WordText = DocumentFormat.OpenXml.Wordprocessing.Text;
 
 namespace Worthy.DocumentBuilder.OpenXml
 {
-    public class TextDocumentBuilder : ITextDocumentBuilder
+    public class WordDocumentBuilder : ITextDocumentBuilder
     {
         public List<IDocumentElement> Elements { get; }
         public DocumentElementType Type => DocumentElementType.Document;
@@ -25,10 +25,10 @@ namespace Worthy.DocumentBuilder.OpenXml
             { DocumentElementType.Text, "Could not render isolated Text Element" }
         };
 
-        public TextDocumentBuilder() : this(new IDocumentElement[0])
+        public WordDocumentBuilder() : this(new IDocumentElement[0])
         {
         }
-        public TextDocumentBuilder(params IDocumentElement[] elements)
+        public WordDocumentBuilder(params IDocumentElement[] elements)
         {
             Elements = elements.ToList ();
         }
@@ -82,6 +82,16 @@ namespace Worthy.DocumentBuilder.OpenXml
             var para = new Paragraph();
             var run = new Run();
 
+            var paraProps = new ParagraphProperties();
+
+            if (paragraph.Style != null && paragraph.Style.HorizontalAlignment.HasValue)
+            {
+                paraProps.Append(new Justification
+                {
+                    Val = new EnumValue<JustificationValues>((JustificationValues)paragraph.Style.HorizontalAlignment.Value)
+                });
+            }
+
             foreach (TextElement text in paragraph.Elements)
             {
                 var style = text.Style;
@@ -95,6 +105,8 @@ namespace Worthy.DocumentBuilder.OpenXml
                 if (style != null)
                 {
                     var props = new RunProperties();
+                    run.Append(props);
+
                     if (!string.IsNullOrWhiteSpace (style.ForegroundColor))
                     {
                         props.Append(new Color()
@@ -102,7 +114,6 @@ namespace Worthy.DocumentBuilder.OpenXml
                             Val = style.ForegroundColor
                         });
                     }
-                    run.Append(props);
 
                     if (!string.IsNullOrWhiteSpace (style.FontName))
                     {
@@ -129,11 +140,20 @@ namespace Worthy.DocumentBuilder.OpenXml
                     {
                         props.Append(new Italic());
                     }
+
+                    //if (style.HorizontalAlignment.HasValue)
+                    //{
+                    //    props.Append(new Justification
+                    //    {
+                    //        Val = new EnumValue<JustificationValues>((JustificationValues)style.HorizontalAlignment.Value)
+                    //    });
+                    //}
                 }
 
                 run.Append(GetConcatenatedText(text));
             }
 
+            para.Append(paraProps);
             para.Append(run);
 
             return para;
@@ -157,12 +177,14 @@ namespace Worthy.DocumentBuilder.OpenXml
         Table GetTable(TableElement tableElement)
         {
             var table = new Table();
+            var tableProperties = new TableProperties();
 
             if (tableElement.Style != null)
             {
                 var style = tableElement.Style;
 
-                var borders = new OpenXmlLeafElement[] {
+                var borders = new OpenXmlElement[]
+                {
                     GetBorder<LeftBorder>(style.BorderLeft),
                     GetBorder<TopBorder>(style.BorderTop),
                     GetBorder<RightBorder>(style.BorderRight),
@@ -170,13 +192,26 @@ namespace Worthy.DocumentBuilder.OpenXml
                 }
                 .Where(b => b != null);
 
-                var tableBorders = new TableBorders(borders);
+                if (borders.Any())
+                {
+                    tableProperties.Append(new TableBorders(borders));
+                }
 
-                var tableProperties = new TableProperties(tableBorders);
+                if (tableElement.Style.Width.HasValue)
+                {
+                    tableProperties.Append(new TableWidth
+                    {
+                        Width = $"{(5000 / 100 * tableElement.Style.Width)}",
+                        Type = TableWidthUnitValues.Pct
+                    });
+                }
+
                 table.Append(tableProperties);
             }
 
             var rows = tableElement.Rows.Select(row => {
+                var rowProps = new TableRowProperties();
+
                 var tableRow = new TableRow(row.Cells.Select(cell =>
                 {
                     var tableCell = new TableCell(cell.Elements.Select(e =>
@@ -219,58 +254,45 @@ namespace Worthy.DocumentBuilder.OpenXml
                         {
                             props.Append(new TableCellVerticalAlignment
                             {
-                                //Val = (TableVerticalAlignmentValues) style.VerticalAlignment.Value
                                 Val = new EnumValue<TableVerticalAlignmentValues>((TableVerticalAlignmentValues) style.VerticalAlignment.Value)
                             });
                         }
 
-                        if (style.HorizontalAlignment.HasValue)
+                        //if (style.HorizontalAlignment.HasValue)
+                        //{
+                        //    props.Append(new Justification
+                        //    {
+                        //        Val = new EnumValue<JustificationValues>((JustificationValues)style.HorizontalAlignment.Value)
+                        //    });
+                        //}
+
+                        if (style.Width.HasValue)
                         {
-                            props.Append(new Justification {
-                                //Val = (JustificationValues)style.HorizontalAlignment
-                                Val = new EnumValue<JustificationValues>((JustificationValues)style.HorizontalAlignment.Value)
+                            props.Append(new TableCellWidth
+                            {
+                                Type = TableWidthUnitValues.Dxa,
+                                Width = $"{style.Width.Value * 1000}",
                             });
                         }
 
                         tableCell.Append(props);
                     }
 
-                    //if (cell.Style != null)
-                    //{
-                    //    if (row.Style.BackgroundColor != null)
-                    //    {
-                    //        var props = new TableCellProperties();
-                    //        props.Append(new Shading
-                    //        {
-                    //            Color = "auto",
-                    //            Fill = row.Style.BackgroundColor,
-                    //            Val = ShadingPatternValues.Clear
-                    //        });
-                    //        tableCell.Append(props);
-                    //    }
-                    //}
-
                     return tableCell;
                 }));
 
-                //if (row.Style != null)
-                //{
-                //    var borders = new OpenXmlLeafElement[] {
-                //            GetBorder<LeftBorder>(row.Style.BorderLeft),
-                //            GetBorder<TopBorder>(row.Style.BorderTop),
-                //            GetBorder<RightBorder>(row.Style.BorderRight),
-                //            GetBorder<BottomBorder>(row.Style.BorderBottom)
-                //        }
-                //            .Where(b => b != null);
+                if (row.Style != null)
+                {
+                    if (row.Style.Height.HasValue)
+                    {
+                        rowProps.Append(new TableRowHeight
+                        {
+                            Val = row.Style.Height.Value * 20
+                        });
+                    }
+                }
 
-                //    if (borders.Any())
-                //    {
-                //        var props = new TableRowProperties();
-
-                //        props.Append(new TableBorders(borders));
-                //        tableRow.Append(props);
-                //    }
-                //}
+                tableRow.Append(rowProps);
 
                 return tableRow;
             });

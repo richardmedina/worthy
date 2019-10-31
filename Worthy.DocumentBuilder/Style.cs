@@ -24,7 +24,10 @@ namespace Worthy.DocumentBuilder
         public VerticalAlignment? VerticalAlignment { get; set; }
         public HorizontalAlignment? HorizontalAlignment { get; set; }
 
-        public string Width { get; set; }
+        public int? Width { get; set; }
+        public uint? Height { get; set; }
         public string BackgroundColor { get; set; }
+
+        public string ReferenceId { get; set; }
     }
 }

@@ -9,7 +9,6 @@ namespace Worthy.DocumentBuilder.Text
     {
         public DocumentElementType Type => DocumentElementType.Paragraph;
         public List<IDocumentElement> Elements { get; }
-
         public Style Style { get; set; }
 
         public ParagraphElement(Style style, string text) : this(style, new TextElement(text))
@@ -31,7 +30,8 @@ namespace Worthy.DocumentBuilder.Text
         public ParagraphElement(Style style, params IDocumentElement[] elements)
         {
             Style = style;
-            Elements = elements.ToList();
+            Elements = elements
+                .ToList();
             //Elements = elements
             //    .Select (e => {
             //        if (Style != null && e.Style !=null)

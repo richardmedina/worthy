@@ -19,7 +19,7 @@ namespace Worthy
         [TestMethod]
         public void CreateDocumentBuilder()
         {
-            IDocumentBuilder docBuilder = new TextDocumentBuilder();
+            IDocumentBuilder docBuilder = new WordDocumentBuilder();
 
             var para = new ParagraphElement(
                 new Style {
@@ -63,11 +63,10 @@ namespace Worthy
                             Width = 10
                         },
                         VerticalAlignment = VerticalAlignment.Center,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-
                         BackgroundColor = n % 2 == 0 ? "#f6f6f6" : null,
                         FontName = FontName,
-                        FontSize = FontSize
+                        FontSize = FontSize,
+                        Height = 70
                     },
                     new TableCellElement(new ParagraphElement("Hello")),
                     new TableCellElement(new ParagraphElement("World")),
@@ -85,7 +84,8 @@ namespace Worthy
                         Type = BorderType.Thick,
                         Width = 10,
                         Color = "333333"
-                    }
+                    },
+                    Width = 50
                 },
                 rows
             );
